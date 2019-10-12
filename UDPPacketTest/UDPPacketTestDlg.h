@@ -4,6 +4,9 @@
 
 #pragma once
 #include "CommonDefine.h"
+#include "vector"
+
+using namespace std;
 
 
 // CUDPPacketTestDlg 对话框
@@ -40,8 +43,15 @@ public:
 	unsigned int StartClient2(LPVOID lParam);
 	static UINT __cdecl StartUDPServer(LPVOID lparam);
 	unsigned int StartServer(LPVOID lParam);
+	afx_msg void OnBnClickedButtonStop();
+	static UINT __cdecl WriteDataThread(LPVOID lParam);
+	void WriteData();
 
 	bool m_bStopClient;
 	bool m_bStopServer;
-	afx_msg void OnBnClickedButtonStop();
+	bool m_bStopWrite;
+	FILE* m_pFile;
+	vector<char*> m_listDataUnit;
+	CMutex m_clsMutex;
+	
 };

@@ -56,6 +56,8 @@ CUDPPacketTestDlg::CUDPPacketTestDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_UDPPACKETTEST_DIALOG, pParent)
 	, m_bStopClient(false)
 	, m_bStopServer(false)
+	, m_pFile(NULL)
+	, m_bStopWrite(false)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -135,6 +137,13 @@ void CUDPPacketTestDlg::OnSysCommand(UINT nID, LPARAM lParam)
 
 void CUDPPacketTestDlg::OnUnInitDialog()
 {
+	if (m_pFile)
+	{
+		fclose(m_pFile);
+		m_pFile = NULL;
+	}
+
+
 	WriteLog("OnUnInitDialog, End Log.\r\n");
 	WriteLogEnd();
 
@@ -250,6 +259,15 @@ void CUDPPacketTestDlg::OnBnClickedButtonServer()
 {
 	WriteLog("onBnClickedButtonServer in.\r\n");
 	AfxBeginThread(StartUDPServer, this, THREAD_PRIORITY_NORMAL, 0, 0);
+	if (!m_pFile)
+	{
+		m_pFile = fopen("c:\\UDPPacketTest.txt", "w+");
+		if (NULL == m_pFile)
+		{
+			WriteLog("fopen failed.\r\n");
+		}
+	}
+	AfxBeginThread(WriteDataThread, this, THREAD_PRIORITY_NORMAL, 0, 0);
 }
 
 
@@ -295,10 +313,6 @@ unsigned int CUDPPacketTestDlg::StartServer(LPVOID lParam)
 	aSockaddr.sin_family = AF_INET;
 
 	inet_pton(AF_INET, "127.0.0.1", (void *)&(aSockaddr.sin_addr));
-
-	//aSockaddr.sin_addr.s_addr = inet_addr("172.16.8.28");
-
-	//aSockaddr.sin_addr = s;
 	aSockaddr.sin_port = htons((u_short)nPort);
 
 	//绑定: 注意参数的类型转换
@@ -318,7 +332,14 @@ unsigned int CUDPPacketTestDlg::StartServer(LPVOID lParam)
 	{
 		char buf = 0;
 		recvfrom(aSocket, &buf, sizeof(buf), 0, (struct sockaddr*) & cli, &len);
-		printf("recv character %c = %hhd\n", buf, buf);
+		printf("recv character %c = %hhd, len = %d.\n", buf, buf, len);
+
+		char * pData = (char*)malloc(len);
+		memcpy(pData, &buf, sizeof(char)*len);
+
+		m_clsMutex.Lock();
+		m_listDataUnit.push_back(pData);
+		m_clsMutex.Unlock();
 	}
 
 	//关闭
@@ -327,8 +348,40 @@ unsigned int CUDPPacketTestDlg::StartServer(LPVOID lParam)
 	return 0;
 }
 
+UINT __cdecl CUDPPacketTestDlg::WriteDataThread(LPVOID lParam)
+{
+	CUDPPacketTestDlg* pThis = (CUDPPacketTestDlg*)lParam;
+
+	while (!pThis->m_bStopWrite)
+	{
+        pThis->WriteData();
+	}
+
+	pThis->WriteData();
+	return 0;
+
+}
+
+void CUDPPacketTestDlg::WriteData()
+{
+	while (m_listDataUnit.size() > 0)
+	{
+		fwrite(m_listDataUnit[0], sizeof(char) * 1, 1, m_pFile);
+		free(m_listDataUnit[0]);
+		m_listDataUnit[0] = NULL;
+
+		m_clsMutex.Lock();
+		vector<char*>::iterator k = m_listDataUnit.begin();
+		m_listDataUnit.erase(k);
+		m_clsMutex.Unlock();
+	}
+	return;
+}
+
+
 void CUDPPacketTestDlg::OnBnClickedButtonStop()
 {
 	m_bStopServer = true;
 	m_bStopClient = true;
+	m_bStopWrite = true;
 }
