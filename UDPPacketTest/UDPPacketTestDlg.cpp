@@ -137,6 +137,7 @@ void CUDPPacketTestDlg::OnSysCommand(UINT nID, LPARAM lParam)
 
 void CUDPPacketTestDlg::OnUnInitDialog()
 {
+	WriteLog("OnUnInitDialog in.\r\n");
 	if (m_pFile)
 	{
 		fclose(m_pFile);
@@ -334,8 +335,8 @@ unsigned int CUDPPacketTestDlg::StartServer(LPVOID lParam)
 		recvfrom(aSocket, &buf, sizeof(buf), 0, (struct sockaddr*) & cli, &len);
 		printf("recv character %c = %hhd, len = %d.\n", buf, buf, len);
 
-		char * pData = (char*)malloc(len);
-		memcpy(pData, &buf, sizeof(char)*len);
+		char * pData = (char*)malloc(sizeof(char));
+		memcpy(pData, &buf, sizeof(char)*1);
 
 		m_clsMutex.Lock();
 		m_listDataUnit.push_back(pData);
@@ -358,14 +359,23 @@ UINT __cdecl CUDPPacketTestDlg::WriteDataThread(LPVOID lParam)
 	}
 
 	pThis->WriteData();
+
+	if (pThis->m_pFile)
+	{
+		fclose(pThis->m_pFile);
+		pThis->m_pFile = NULL;
+	}
 	return 0;
 
 }
 
 void CUDPPacketTestDlg::WriteData()
 {
+   WriteLog("WriteData,in.\r\n");
 	while (m_listDataUnit.size() > 0)
 	{
+	    int len = m_listDataUnit.size();
+	    WriteLog("WriteData,m_listDataUnit len = %d.\r\n", len);
 		fwrite(m_listDataUnit[0], sizeof(char) * 1, 1, m_pFile);
 		free(m_listDataUnit[0]);
 		m_listDataUnit[0] = NULL;
@@ -375,6 +385,7 @@ void CUDPPacketTestDlg::WriteData()
 		m_listDataUnit.erase(k);
 		m_clsMutex.Unlock();
 	}
+	
 	return;
 }
 
