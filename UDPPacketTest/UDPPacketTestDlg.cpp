@@ -8,6 +8,8 @@
 #include "afxdialogex.h"
 #include "udpServer.h"
 #include "udpClient.h"
+#include <afxwin.h>
+#include <afxsock.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -52,6 +54,8 @@ END_MESSAGE_MAP()
 
 CUDPPacketTestDlg::CUDPPacketTestDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_UDPPACKETTEST_DIALOG, pParent)
+	, m_bStopClient(false)
+	, m_bStopServer(false)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -67,6 +71,7 @@ BEGIN_MESSAGE_MAP(CUDPPacketTestDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTONCLIENT, &CUDPPacketTestDlg::OnBnClickedButtonClient)
 	ON_BN_CLICKED(IDC_BUTTONSERVER, &CUDPPacketTestDlg::OnBnClickedButtonServer)
+	ON_BN_CLICKED(IDC_BUTTONSTOP, &CUDPPacketTestDlg::OnBnClickedButtonStop)
 END_MESSAGE_MAP()
 
 
@@ -175,14 +180,155 @@ HCURSOR CUDPPacketTestDlg::OnQueryDragIcon()
 
 void CUDPPacketTestDlg::OnBnClickedButtonClient()
 {
-	StartClient2(0);
+	AfxBeginThread(StartUDPClient, this, THREAD_PRIORITY_NORMAL, 0, 0);
 }
 
+UINT __cdecl CUDPPacketTestDlg::StartUDPClient(LPVOID lparam)
+{
+	int iRes = ERROR_NONE;
+	CUDPPacketTestDlg *threadol = (CUDPPacketTestDlg*)lparam;
+	threadol->StartClient2(0);
+	return 0;
+}
 
+unsigned int CUDPPacketTestDlg::StartClient2(LPVOID lParam)
+{
+#if 1
+	//初始化Winscok
+	if (!AfxSocketInit())
+	{
+		printf("AfxSocketInit failed\n");
+		return 1;
+	}
+
+	printf("====AfxSocketInit done\n");
+#endif
+	//创建socket对象
+	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sockfd == INVALID_SOCKET)
+	{
+		printf("Create failed\n");
+		return 1;
+	}
+
+	printf("====Create done\n");
+	//创建网络通信对象
+	struct sockaddr_in addr;
+	struct in_addr s;
+
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(8080);
+	//addr.sin_addr.s_addr = inet_addr("192.168.0.143");
+	inet_pton(AF_INET, "127.0.0.1", (void*) & (addr.sin_addr));
+
+	while (!m_bStopClient)
+	{
+		char buf = 'a';
+		sendto(sockfd, &buf,
+			sizeof(buf), 0, (struct sockaddr*) & addr, sizeof(addr));
+		WriteLog("char a.\r\n");
+#if 0
+		socklen_t len = sizeof(addr);
+		recvfrom(sockfd, &buf, sizeof(buf), 0, (struct sockaddr*) & addr, &len);
+
+		if (66 == buf)
+		{
+			printf(" server 成功接受\n");
+		}
+		else
+		{
+			printf("server 数据丢失\n");
+		}
+#endif
+	}
+	closesocket(sockfd);
+
+}
 
 
 void CUDPPacketTestDlg::OnBnClickedButtonServer()
 {
 	WriteLog("onBnClickedButtonServer in.\r\n");
-	StartServer(0);
+	AfxBeginThread(StartUDPServer, this, THREAD_PRIORITY_NORMAL, 0, 0);
+}
+
+
+UINT __cdecl CUDPPacketTestDlg::StartUDPServer(LPVOID lparam)
+{
+	CUDPPacketTestDlg * threadol = (CUDPPacketTestDlg*)lparam;
+	threadol->StartServer(0);
+	return 0;
+}
+
+
+unsigned int CUDPPacketTestDlg::StartServer(LPVOID lParam)
+{
+	//SOCKET aSocket;
+	UINT nPort = 8080;
+#if 1
+	//初始化Winscok
+	if (!AfxSocketInit())
+	{
+		WriteLog("AfxSocketInit failed\n");
+		return 1;
+	}
+
+	WriteLog("====AfxSocketInit done\n");
+#endif
+	//寻址相关结构
+	sockaddr_in serverSockaddr;
+	memset(&serverSockaddr, 0, sizeof(serverSockaddr));
+	int aSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (aSocket == INVALID_SOCKET)
+	{
+		printf("Create failed\n");
+		return 1;
+	}
+
+	printf("====Create done\n");
+
+	//寻址相关结构
+	sockaddr_in aSockaddr;
+	struct in_addr s;
+
+	memset(&aSockaddr, 0, sizeof(aSockaddr));
+	aSockaddr.sin_family = AF_INET;
+
+	inet_pton(AF_INET, "127.0.0.1", (void *)&(aSockaddr.sin_addr));
+
+	//aSockaddr.sin_addr.s_addr = inet_addr("172.16.8.28");
+
+	//aSockaddr.sin_addr = s;
+	aSockaddr.sin_port = htons((u_short)nPort);
+
+	//绑定: 注意参数的类型转换
+	if (bind(aSocket, (sockaddr*)& aSockaddr, sizeof(aSockaddr)) == SOCKET_ERROR)
+	{
+		int err = WSAGetLastError();
+		printf("Bind failed, err = %d.\n", err);
+		return 1;
+	}
+
+	printf("===Bind done\n");
+
+	struct sockaddr_in cli;
+	socklen_t len = sizeof(cli);
+
+	while (!m_bStopServer)
+	{
+		char buf = 0;
+		recvfrom(aSocket, &buf, sizeof(buf), 0, (struct sockaddr*) & cli, &len);
+		printf("recv character %c = %hhd\n", buf, buf);
+	}
+
+	//关闭
+	closesocket(aSocket);
+
+	return 0;
+}
+
+void CUDPPacketTestDlg::OnBnClickedButtonStop()
+{
+	m_bStopServer = true;
+	m_bStopClient = true;
 }

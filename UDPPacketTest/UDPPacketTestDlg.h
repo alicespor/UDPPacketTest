@@ -36,4 +36,12 @@ public:
 	afx_msg void OnBnClickedButtonClient();
 	afx_msg void OnBnClickedButtonServer();
 	void OnUnInitDialog();
+	static UINT __cdecl StartUDPClient(LPVOID lparam);
+	unsigned int StartClient2(LPVOID lParam);
+	static UINT __cdecl StartUDPServer(LPVOID lparam);
+	unsigned int StartServer(LPVOID lParam);
+
+	bool m_bStopClient;
+	bool m_bStopServer;
+	afx_msg void OnBnClickedButtonStop();
 };

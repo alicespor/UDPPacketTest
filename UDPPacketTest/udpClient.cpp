@@ -47,9 +47,7 @@ unsigned int StartClient2(LPVOID lParam)
 
 	while (1)
 	{
-		printf("请输入一个数字：");
-		char buf = 0;
-		scanf_s("%hhd", &buf);
+		char buf = 'a';
 		sendto(sockfd, &buf,
 			sizeof(buf), 0, (struct sockaddr*) & addr, sizeof(addr));
 #if 0
