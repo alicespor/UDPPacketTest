@@ -2,15 +2,17 @@
 //
 #include "stdafx.h"
 #include "afxsock.h"
+#include "CommonDefine.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
+
 // The one and only application object
 
 
-using namespace std;
+//using namespace std;
 
 unsigned int StartServer(LPVOID lParam)
 {
@@ -20,11 +22,11 @@ unsigned int StartServer(LPVOID lParam)
 	//初始化Winscok
 	if (!AfxSocketInit())
 	{
-		printf("AfxSocketInit failed\n");
+		WriteLog("AfxSocketInit failed\n");
 		return 1;
 	}
 
-	printf("====AfxSocketInit done\n");
+	WriteLog("====AfxSocketInit done\n");
 #endif
 	//寻址相关结构
 	sockaddr_in serverSockaddr;

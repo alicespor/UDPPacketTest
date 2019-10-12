@@ -6,6 +6,8 @@
 #include "UDPPacketTest.h"
 #include "UDPPacketTestDlg.h"
 #include "afxdialogex.h"
+#include "udpServer.h"
+#include "udpClient.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -48,7 +50,6 @@ END_MESSAGE_MAP()
 // CUDPPacketTestDlg 对话框
 
 
-
 CUDPPacketTestDlg::CUDPPacketTestDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_UDPPACKETTEST_DIALOG, pParent)
 {
@@ -64,6 +65,8 @@ BEGIN_MESSAGE_MAP(CUDPPacketTestDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDC_BUTTONCLIENT, &CUDPPacketTestDlg::OnBnClickedButtonClient)
+	ON_BN_CLICKED(IDC_BUTTONSERVER, &CUDPPacketTestDlg::OnBnClickedButtonServer)
 END_MESSAGE_MAP()
 
 
@@ -99,6 +102,8 @@ BOOL CUDPPacketTestDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	WriteLogBegin();
+	WriteLog("Start Log.");
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -113,7 +118,21 @@ void CUDPPacketTestDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	else
 	{
 		CDialogEx::OnSysCommand(nID, lParam);
+		switch (nID)
+		{
+		case SC_CLOSE:
+		{
+			OnUnInitDialog();
+		}
+		}
 	}
+}
+
+void CUDPPacketTestDlg::OnUnInitDialog()
+{
+	WriteLog("OnUnInitDialog, End Log.\r\n");
+	WriteLogEnd();
+
 }
 
 // 如果向对话框添加最小化按钮，则需要下面的代码
@@ -152,3 +171,18 @@ HCURSOR CUDPPacketTestDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+
+void CUDPPacketTestDlg::OnBnClickedButtonClient()
+{
+	StartClient2(0);
+}
+
+
+
+
+void CUDPPacketTestDlg::OnBnClickedButtonServer()
+{
+	WriteLog("onBnClickedButtonServer in.\r\n");
+	StartServer(0);
+}
