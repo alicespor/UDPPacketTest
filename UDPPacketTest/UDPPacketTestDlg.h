@@ -53,5 +53,7 @@ public:
 	FILE* m_pFile;
 	vector<char*> m_listDataUnit;
 	CMutex m_clsMutex;
+	long int m_lFileSize;
 	
+	CEdit m_CEFileSize;
 };

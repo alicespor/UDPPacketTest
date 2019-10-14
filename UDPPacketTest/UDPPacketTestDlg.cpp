@@ -58,6 +58,7 @@ CUDPPacketTestDlg::CUDPPacketTestDlg(CWnd* pParent /*=nullptr*/)
 	, m_bStopServer(false)
 	, m_pFile(NULL)
 	, m_bStopWrite(false)
+	, m_lFileSize(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -65,6 +66,7 @@ CUDPPacketTestDlg::CUDPPacketTestDlg(CWnd* pParent /*=nullptr*/)
 void CUDPPacketTestDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_EDIT_FILESIZE, m_CEFileSize);
 }
 
 BEGIN_MESSAGE_MAP(CUDPPacketTestDlg, CDialogEx)
@@ -376,7 +378,17 @@ void CUDPPacketTestDlg::WriteData()
 	{
 	    int len = m_listDataUnit.size();
 	    WriteLog("WriteData,m_listDataUnit len = %d.\r\n", len);
-		fwrite(m_listDataUnit[0], sizeof(char) * 1, 1, m_pFile);
+	    int iDataLen = 1;
+		fwrite(m_listDataUnit[0], sizeof(char) * 1, iDataLen, m_pFile);
+		m_lFileSize += iDataLen;
+
+		CString str(_T(""));
+		str.Format(_T("%d"), m_lFileSize);
+		m_CEFileSize.SetWindowText(str);
+
+
+
+
 		free(m_listDataUnit[0]);
 		m_listDataUnit[0] = NULL;
 
