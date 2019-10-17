@@ -19,7 +19,7 @@
  *
  */
 
-#include "stdafx.h"
+#include "../stdafx.h"
 #include "ChartDragLineCursor.h"
 #include "ChartCtrl.h"
 

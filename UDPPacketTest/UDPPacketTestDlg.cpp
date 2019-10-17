@@ -10,6 +10,11 @@
 #include "udpClient.h"
 #include <afxwin.h>
 #include <afxsock.h>
+#include "./ChartCtrl/ChartTitle.h"
+#include "./ChartCtrl/ChartAxis.h"
+#include "./ChartCtrl/ChartAxisLabel.h"
+
+#include "./ChartCtrl/ChartLineSerie.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -67,6 +72,7 @@ void CUDPPacketTestDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EDIT_FILESIZE, m_CEFileSize);
+	DDX_Control(pDX, IDC_CHARTCONTROL, m_ChartCtrl);
 }
 
 BEGIN_MESSAGE_MAP(CUDPPacketTestDlg, CDialogEx)
@@ -114,7 +120,120 @@ BOOL CUDPPacketTestDlg::OnInitDialog()
 	WriteLogBegin();
 	WriteLog("Start Log.");
 
+
+
+	CRect rect, rectChart;
+	GetDlgItem(IDC_CHARTCONTROL)->GetWindowRect(&rect);
+	ScreenToClient(rect);
+	rectChart = rect;
+	rectChart.top = rect.bottom + 3;
+	rectChart.bottom = rectChart.top + rect.Height();
+	m_ChartCtrl2.Create(this, rectChart, IDC_CHARTCONTROL2);
+	m_ChartCtrl2.ShowWindow(SW_SHOWNORMAL);
+
+	CChartAxis *pAxis = NULL;
+	pAxis = m_ChartCtrl.CreateStandardAxis(CChartCtrl::BottomAxis);
+	pAxis->SetAutomatic(true);
+	pAxis = m_ChartCtrl.CreateStandardAxis(CChartCtrl::LeftAxis);
+	pAxis->SetAutomatic(true);
+
+
+	CChartDateTimeAxis* pDateAxis = NULL;
+	pDateAxis = NULL;
+	pDateAxis = m_ChartCtrl2.CreateDateTimeAxis(CChartCtrl::BottomAxis);
+	pDateAxis->SetAutomatic(true);
+	pDateAxis->SetTickLabelFormat(false, _T("%m月%d日"));
+	pAxis = m_ChartCtrl2.CreateStandardAxis(CChartCtrl::LeftAxis);
+	pAxis->SetAutomatic(true);
+
+	
+	TChartString str1;
+	str1 = _T("IDC_ChartCtrl - m_ChartCtrl1");
+	m_ChartCtrl.GetTitle()->AddString(str1);
+
+	CString str2(_T(""));
+	str2 = _T("IDC_ChartCtrl2 - m_ChartCtrl2");
+	m_ChartCtrl2.GetTitle()->AddString(TChartString(str2));
+
+
+	CChartAxisLabel* pLabel = NULL;
+//	CChartAxis *pAxis = NULL;
+	str1 = _T("左坐标轴");
+
+	//CChartAxisLabel* pLabel = NULL;
+
+	pAxis = m_ChartCtrl.GetLeftAxis();
+	if (pAxis)
+	{
+		pLabel = pAxis->GetLabel();
+		if (pLabel)
+			pLabel->SetText(str1);
+	}
+
+	m_ChartCtrl2.GetLeftAxis()->GetLabel()->SetText(str1);
+		
+
+
+	str1 = _T("数值坐标轴");
+	pAxis = m_ChartCtrl.GetBottomAxis();
+	if (pAxis)
+		pLabel = pAxis->GetLabel();
+	if (pLabel)
+		pLabel->SetText(str1);
+	str1 = _T("时间坐标轴");
+
+	m_ChartCtrl2.GetBottomAxis()->GetLabel()->SetText(str1);
+
+	testChart();
+
+
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
+}
+
+void CUDPPacketTestDlg::testChart()
+{
+	m_ChartCtrl.EnableRefresh(false);
+	m_ChartCtrl2.EnableRefresh(false);
+	//////////////////////////////////////////////////////////////////////////
+	//画图测试
+	//////////////////////////////////////////////////////////////////////////
+	double x[1000], y[1000];
+	for (int i = 0; i < 100; i++)
+	{
+		x[i] = i;
+		y[i] = sin(float(i));
+	}
+	CChartLineSerie *pLineSerie1;
+	m_ChartCtrl.RemoveAllSeries();//先清空
+	pLineSerie1 = m_ChartCtrl.CreateLineSerie();
+	pLineSerie1->SetSeriesOrdering(poNoOrdering);//设置为无序
+	pLineSerie1->AddPoints(x, y, 100);
+	pLineSerie1->SetName(_T("这是IDC_ChartCtrl1的第一条线"));//SetName的作用将在后面讲到
+	
+	SetTimer(1,1000,NULL);
+
+	//////////////////////////////////////////////////////////////////////////
+//时间轴画图
+//////////////////////////////////////////////////////////////////////////
+	COleDateTime t1(COleDateTime::GetCurrentTime());
+	COleDateTimeSpan tsp(1, 0, 0, 0);
+	for (int i = 0; i < 1000; i++)
+	{
+		x[i] = t1.m_dt;
+		y[i] = sin(float(i));
+		t1 += tsp;
+	}
+	CChartLineSerie *pLineSerie2;
+	m_ChartCtrl2.RemoveAllSeries();//先清空
+	pLineSerie2 = m_ChartCtrl2.CreateLineSerie();
+	pLineSerie2->SetSeriesOrdering(poNoOrdering);//设置为无序
+	pLineSerie2->AddPoints(x, y, 1000);
+	pLineSerie2->SetName(_T("这是IDC_ChartCtrl2的第一条线"));//SetName的作用将在后面讲到
+
+	m_ChartCtrl.EnableRefresh(true);
+	m_ChartCtrl2.EnableRefresh(true);
+
+
 }
 
 void CUDPPacketTestDlg::OnSysCommand(UINT nID, LPARAM lParam)

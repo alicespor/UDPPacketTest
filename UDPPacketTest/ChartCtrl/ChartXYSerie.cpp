@@ -19,7 +19,7 @@
  *
  */
 
-#include "stdafx.h"
+#include "../stdafx.h"
 #include "ChartXYSerie.h"
 
 CChartXYSerie::CChartXYSerie(CChartCtrl* pParent) 

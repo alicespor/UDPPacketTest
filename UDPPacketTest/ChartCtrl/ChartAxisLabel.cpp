@@ -22,7 +22,7 @@
  *
  */
 
-#include "stdafx.h"
+#include "../stdafx.h"
 #include "ChartAxisLabel.h"
 #include "ChartCtrl.h"
 

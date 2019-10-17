@@ -21,7 +21,7 @@
  *		- 07/07/2008: Last point of the series was not displayed. Fixed.
  */
 
-#include "stdafx.h"
+#include "../stdafx.h"
 #include "ChartPointsSerie.h"
 #include "ChartCtrl.h"
 #include "Math.h"

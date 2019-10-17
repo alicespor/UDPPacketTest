@@ -5,6 +5,7 @@
 #pragma once
 #include "CommonDefine.h"
 #include "vector"
+#include "ChartCtrl/ChartCtrl.h"
 
 using namespace std;
 
@@ -56,4 +57,10 @@ public:
 	long int m_lFileSize;
 	
 	CEdit m_CEFileSize;
+
+
+	//define for chart
+	void testChart();
+	CChartCtrl m_ChartCtrl;
+	CChartCtrl m_ChartCtrl2;
 };

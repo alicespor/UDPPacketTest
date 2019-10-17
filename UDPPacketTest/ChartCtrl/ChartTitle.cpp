@@ -19,7 +19,7 @@
  *
  */
 
-#include "stdafx.h"
+#include "../stdafx.h"
 #include "ChartTitle.h"
 #include "ChartCtrl.h"
 #include "Math.h"

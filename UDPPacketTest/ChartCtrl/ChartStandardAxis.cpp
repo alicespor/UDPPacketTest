@@ -18,7 +18,7 @@
  *
  */
 
-#include "stdafx.h"
+#include "../stdafx.h"
 #include "ChartStandardAxis.h"
 #include "ChartCtrl.h"
 #include <sstream>

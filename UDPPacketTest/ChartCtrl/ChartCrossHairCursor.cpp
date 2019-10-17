@@ -19,7 +19,7 @@
  *
  */
 
-#include "stdafx.h"
+#include "../stdafx.h"
 #include "ChartCrossHairCursor.h"
 #include "ChartCtrl.h"
 

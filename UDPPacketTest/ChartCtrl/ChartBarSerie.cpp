@@ -19,7 +19,7 @@
  *
  */
 
-#include "stdafx.h"
+#include "../stdafx.h"
 #include "ChartBarSerie.h"
 #include "ChartCtrl.h"
 #include <algorithm>
