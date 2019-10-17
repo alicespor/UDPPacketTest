@@ -77,6 +77,7 @@ void CUDPPacketTestDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CUDPPacketTestDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
+	ON_WM_TIMER()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTONCLIENT, &CUDPPacketTestDlg::OnBnClickedButtonClient)
@@ -131,13 +132,14 @@ BOOL CUDPPacketTestDlg::OnInitDialog()
 	m_ChartCtrl2.Create(this, rectChart, IDC_CHARTCONTROL2);
 	m_ChartCtrl2.ShowWindow(SW_SHOWNORMAL);
 
-	CChartAxis *pAxis = NULL;
+	/*CChartAxis *pAxis = NULL;
 	pAxis = m_ChartCtrl.CreateStandardAxis(CChartCtrl::BottomAxis);
 	pAxis->SetAutomatic(true);
 	pAxis = m_ChartCtrl.CreateStandardAxis(CChartCtrl::LeftAxis);
-	pAxis->SetAutomatic(true);
+	pAxis->SetAutomatic(true);*/
 
 
+	CChartAxis *pAxis = NULL;
 	CChartDateTimeAxis* pDateAxis = NULL;
 	pDateAxis = NULL;
 	pDateAxis = m_ChartCtrl2.CreateDateTimeAxis(CChartCtrl::BottomAxis);
@@ -148,8 +150,8 @@ BOOL CUDPPacketTestDlg::OnInitDialog()
 
 	
 	TChartString str1;
-	str1 = _T("IDC_ChartCtrl - m_ChartCtrl1");
-	m_ChartCtrl.GetTitle()->AddString(str1);
+	/*str1 = _T("IDC_ChartCtrl - m_ChartCtrl1");
+	m_ChartCtrl.GetTitle()->AddString(str1);*/
 
 	CString str2(_T(""));
 	str2 = _T("IDC_ChartCtrl2 - m_ChartCtrl2");
@@ -157,10 +159,7 @@ BOOL CUDPPacketTestDlg::OnInitDialog()
 
 
 	CChartAxisLabel* pLabel = NULL;
-//	CChartAxis *pAxis = NULL;
 	str1 = _T("左坐标轴");
-
-	//CChartAxisLabel* pLabel = NULL;
 
 	pAxis = m_ChartCtrl.GetLeftAxis();
 	if (pAxis)
@@ -184,7 +183,9 @@ BOOL CUDPPacketTestDlg::OnInitDialog()
 
 	m_ChartCtrl2.GetBottomAxis()->GetLabel()->SetText(str1);
 
-	testChart();
+	//testChart();
+
+	testChartDynamic();
 
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
@@ -234,6 +235,81 @@ void CUDPPacketTestDlg::testChart()
 	m_ChartCtrl2.EnableRefresh(true);
 
 
+}
+
+void CUDPPacketTestDlg::testChartDynamic()
+{
+	ChartCtrlInit();
+
+	DataBuffInit();
+
+	SetTimer(1,100, NULL);
+
+}
+
+#define DATA_SHOW_LENGHT	2000	//总共显示的点个数
+#define DATA_UPDATE_LENGHT	10    //每次更新的点个数
+#define DATA_SHOW_X_AXIS	2000   //X轴显示的点最大值
+#define DATA_SHOW_Y_AXIS	1000   //Y轴显示的点最大值
+
+void CUDPPacketTestDlg::ChartCtrlInit()
+{
+	m_ChartCtrl.GetTitle()->AddString(_T("UDP数据波形"));
+	CChartAxis * pAxis = NULL;
+	pAxis = m_ChartCtrl.CreateStandardAxis(CChartCtrl::BottomAxis);
+	pAxis->SetMinMax(0, DATA_SHOW_X_AXIS);
+
+	pAxis = m_ChartCtrl.CreateStandardAxis(CChartCtrl::LeftAxis);
+	pAxis->SetMinMax(0, DATA_SHOW_Y_AXIS);
+
+}
+
+static double xBuff[DATA_SHOW_LENGHT] = {0};
+static double yBuff[DATA_SHOW_LENGHT] = {0};
+
+void CUDPPacketTestDlg::DataBuffInit()
+{
+	for (int i = 0; i < DATA_SHOW_LENGHT; i++)
+	{
+		xBuff[i] = i;
+		yBuff[i] = 50;//cos((i)) * 10 + 50;
+	}
+}
+
+void CUDPPacketTestDlg::DataShow(double *xb, double *yb, int len) {
+	m_ChartCtrl.EnableRefresh(false);
+
+	CChartLineSerie *pLineSerie;
+	m_ChartCtrl.RemoveAllSeries();
+	pLineSerie = m_ChartCtrl.CreateLineSerie();
+	pLineSerie->SetSeriesOrdering(poNoOrdering);//设置为无序
+	pLineSerie->AddPoints(xb, yb, len);
+
+	UpdateWindow();
+	m_ChartCtrl.EnableRefresh(true);
+}
+
+void CUDPPacketTestDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	static int offset = 0;
+
+	for (int m = 0; m < DATA_SHOW_LENGHT - DATA_UPDATE_LENGHT; m++)
+	{
+		//xd[m] = xd[DATA_UPDATE_LENGHT + m];
+		yBuff[m] = yBuff[DATA_UPDATE_LENGHT + m];
+	}
+
+	int index = DATA_SHOW_LENGHT - DATA_UPDATE_LENGHT;
+	for (int i = 0; i < DATA_UPDATE_LENGHT; i++)
+	{
+		//yd[index + i] = cos((index + i + w)/5) * 50 + 100+rand() / 1000;
+		yBuff[index + i] = cos((i + offset) / 5) * DATA_SHOW_Y_AXIS / 4 + rand() / 1000 + DATA_SHOW_Y_AXIS / 2;
+	}
+	DataShow(xBuff, yBuff, DATA_SHOW_LENGHT);
+	offset++;
+	if (offset > 10000) {
+		offset = 0;
+	}
 }
 
 void CUDPPacketTestDlg::OnSysCommand(UINT nID, LPARAM lParam)

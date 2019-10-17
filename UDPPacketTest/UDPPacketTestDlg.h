@@ -61,6 +61,12 @@ public:
 
 	//define for chart
 	void testChart();
+	void testChartDynamic();
+	void OnTimer(UINT_PTR nIDEvent);
+	void ChartCtrlInit();
+	void DataBuffInit();
+	void DataShow(double *xb, double *yb, int len);
+
 	CChartCtrl m_ChartCtrl;
 	CChartCtrl m_ChartCtrl2;
 };
